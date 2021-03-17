@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import traceback 
 import os
 import time
 
 # Assistant
-from functions.vcap import getService
 from watson_developer_cloud import AssistantV1
+from functions.vcap import getService
 from functions.auth_user import auth, getUser
 from flask import session
 
@@ -17,8 +18,8 @@ from flask_login import LoginManager, login_required, login_user, logout_user, U
 import io
 from PIL import Image
 
-
 app = Flask(__name__)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 #############
 ### LOGIN ###
