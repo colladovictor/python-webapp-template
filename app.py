@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+import traceback 
 import os
 import time
 
@@ -236,6 +237,7 @@ def postAPI():
         return jsonify({'response': "Done Saving Image"})
 
     except Exception as e:
+        traceback.print_exc(chain=False)
         return jsonify({"error": repr(e)})
 
 ## Main ##
