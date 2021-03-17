@@ -95,7 +95,6 @@ def page_not_found(e):
 
 @login_manager.user_loader
 def load_user(uid):
-
     return User(uid, getUser(uid))
 
 ############
@@ -153,7 +152,7 @@ def message():
         reply = r['output']['text'][0]
 
     except Exception as e:
-        print(e)
+        traceback.print_exc(chain=False)
         return repr(e)
     ## Watson Assistant END ##
 
@@ -198,6 +197,7 @@ def getApi():
         return jsonify({'response': "POST Response"})
 
     except Exception as e:
+        traceback.print_exc(chain=False)
         return jsonify({"error": repr(e)})
 
 ## GET Request handler ##
@@ -215,6 +215,7 @@ def postApi():
         return jsonify({'response': "Get Response"})
 
     except Exception as e:
+        traceback.print_exc(chain=False)
         return jsonify({"error": repr(e)})
 
 
