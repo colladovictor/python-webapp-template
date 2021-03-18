@@ -20,7 +20,7 @@ function sendRequest(message) {
 
     $.ajax({
         method: "POST",
-        url: "./api/message",
+        url: "./local-api/message",
         data: req
     })
         .done(function (response) {

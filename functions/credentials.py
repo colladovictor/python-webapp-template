@@ -6,8 +6,8 @@ def getService(name):
         vcap = json.loads(os.getenv('VCAP_SERVICES'))
         print('Found VCAP_SERVICES')
 
-    elif os.path.isfile('vcap-local.json'):
-        vcap = json.load(open('vcap-local.json'))
+    elif os.path.isfile('credentials.json'):
+        vcap = json.load(open('credentials.json'))
         print('Found local VCAP_SERVICES')
     
     

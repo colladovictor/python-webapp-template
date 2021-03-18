@@ -88,7 +88,7 @@ function sendPostRequest(request) {
 
     $.ajax({
         method: "POST",
-        url: "./api/post",
+        url: "./local-api/post",
         data: { "request": request }
     }).done(function (response) {
 
@@ -187,7 +187,7 @@ function sendGetRequest(request) {
 
     $.ajax({
         method: "GET",
-        url: "./api/get",
+        url: "./local-api/get",
         data: { "request": request }
     }).done(function (response) {
 
@@ -227,7 +227,7 @@ $("#img-input").change(function () {
             var form = new FormData($('#form')[0]);
 
             $.ajax({
-                url: '/api/image',
+                url: '/local-api/image',
                 type: 'POST',
                 data: form,
                 cache: false,

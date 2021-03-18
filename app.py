@@ -5,8 +5,9 @@ import os
 import time
 
 # Assistant
-from watson_developer_cloud import AssistantV1
-from functions.vcap import getService
+from watson_developer_cloud import AssistantV2
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from functions.credentials import getService
 from functions.auth_user import auth, getUser
 from flask import session
 
@@ -36,8 +37,6 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 # user model for login
-
-
 class User(UserMixin):
 
     def __init__(self, id, name):
@@ -57,8 +56,6 @@ class User(UserMixin):
         return True
 
 ## Login methods ##
-
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == 'POST':
@@ -75,8 +72,6 @@ def login():
         return render_template("login.html")
 
 # logout API
-
-
 @app.route("/logout", methods=["GET"])
 @login_required
 def logout():
@@ -85,15 +80,11 @@ def logout():
     return redirect('login')
 
 # handle login failed
-
-
 @app.errorhandler(401)
 def page_not_found(e):
     return Response('<p>Login failed, Invalid username or password</p>')
 
 # callback to reload the user object
-
-
 @login_manager.user_loader
 def load_user(uid):
     return User(uid, getUser(uid))
@@ -108,49 +99,61 @@ app.config.update(SECRET_KEY='aoun@ibm')
 ## Watson Assistant ##
 api, url = getService('assistant')
 
-conversation = AssistantV1(
-    version='2018-09-20',
-    iam_apikey=api,
-    url=url
+authenticator = IAMAuthenticator(api)
+assistant = AssistantV2(
+    version='2020-09-24',
+    authenticator=authenticator
 )
+assistant.set_service_url(url)
+ASSISTANT_ID = "12345"
 
 ## Chat page ##
-
-
 @app.route('/chat')
 def chat():
 
-    session.clear()
+    ## Watson session context
+    response = assistant.create_session(
+        assistant_id=ASSISTANT_ID
+        ).get_result()
+    session['session_id'] = response['session_id']
+    ## End Watson session context
+
     return render_template('chat.html')
 
 ## Chat GET Request handler ##
-
-
-@app.route('/api/message', methods=['POST'])
+@app.route('/local-api/message', methods=['POST'])
 def message():
 
     msg = request.form.get('msg')
 
-    if 'context' not in session:
-        session['context'] = {}
+    if 'session_id' not in session:
+        response = assistant.create_session(
+            assistant_id=ASSISTANT_ID
+            ).get_result()
+        session['session_id'] = response['session_id']
 
     if 'input' in msg:
-        text = {'text': msg}
+        inp = {
+            'message_type': 'text',
+            'text': msg
+            }
     else:
-        text = {'text': ''}
+        inp = {
+            'message_type': 'text',
+            'text': 'Hello'
+        }
 
     reply = 'Have a reply'
 
     ## Watson Assistant ##
     try:
-        r = conversation.message(
-            workspace_id='**************',
-            input=text,
-            context=session['context']
+        r = assistant.message(
+            assistant_id=ASSISTANT_ID,
+            session_id=session['session_id'],
+            input=inp
         ).get_result()
 
-        session['context'] = r['context']
-        reply = r['output']['text'][0]
+        reply = r['output']['generic'][0]['text']
 
     except Exception as e:
         traceback.print_exc(chain=False)
@@ -164,8 +167,6 @@ def message():
 ############
 
 ## Main methods ##
-
-
 @app.after_request
 def add_header(response):
     """
@@ -182,13 +183,10 @@ def home():
     return render_template('index.html')
 
 ## GET Request handler ##
-
-
-@app.route('/api/post', methods=['POST'])
+@app.route('/local-api/post', methods=['POST'])
 def getApi():
 
     try:
-
         print(request.form)
         req = request.form.to_dict()['request']
         print(req)
@@ -202,18 +200,16 @@ def getApi():
         return jsonify({"error": repr(e)})
 
 ## GET Request handler ##
-
-@app.route('/api/get', methods=['GET'])
+@app.route('/local-api/get', methods=['GET'])
 def postApi():
 
     try:
-
         req = request.args.get('request')
         print(req)
 
         time.sleep(2)
 
-        return jsonify({'response': "Get Response"})
+        return jsonify({'response': "GET Response"})
 
     except Exception as e:
         traceback.print_exc(chain=False)
@@ -224,8 +220,7 @@ def postApi():
 ### Image Handling ###
 ######################
 
-
-@app.route('/api/image', methods=['POST'])
+@app.route('/local-api/image', methods=['POST'])
 def postAPI():
 
     try:
@@ -242,9 +237,26 @@ def postAPI():
         traceback.print_exc(chain=False)
         return jsonify({"error": repr(e)})
 
+################################
+### Public Json post request ###
+################################
+
+@app.route('/api/v1/process', methods=['POST'])
+def publicAPI():
+
+    try:
+        data = request.get_json()
+
+        time.sleep(2)
+
+        return jsonify({'response': data})
+
+    except Exception as e:
+        traceback.print_exc(chain=False)
+        return jsonify({"error": repr(e)})
+
+
 ## Main ##
-
-
 if __name__ == '__main__':
 
     port = int(os.getenv('PORT', 8080))
