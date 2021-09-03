@@ -96,15 +96,17 @@ def load_user(uid):
 # Secret Key to use for session
 app.config.update(SECRET_KEY='aoun@ibm')
 
+
+####TODO SIGNED BY VICTOR
 ## Watson Assistant ##
-api, url = getService('assistant')
+api, url_value = getService('assistant')
 
 authenticator = IAMAuthenticator(api)
 assistant = AssistantV2(
     version='2020-09-24',
+    url=url_value
     authenticator=authenticator
 )
-assistant.set_service_url(url)
 ASSISTANT_ID = "12345"
 
 ## Chat page ##
