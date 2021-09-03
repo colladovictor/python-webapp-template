@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+watson-developer-cloud = "*"
+Flask = "*"
+Flask-Cors = "*"
+Flask-Login = "*"
+Pillow = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
